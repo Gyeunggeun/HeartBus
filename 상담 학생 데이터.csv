@@ -1,0 +1,4 @@
+﻿start_date,start_hour,start_minute,name,age,gender,communication,number,grade,relationship,sex,bullying,domestic_violence,depression,lifestyle,addiction,drugs,Teenager_counsler,College_counsler,Adult_counsler,additional_text,status
+2023-04-29,21,30,일호선,11,남성,휴대전화 번호,1012341234,True,True,False,True,False,False,False,False,False,False,True,False,없음,approved
+2023-04-29,22,0,일호선,12,남성,휴대전화 번호,1012341234,True,False,False,False,False,True,False,False,False,False,True,False,없음,requested
+2023-04-29,21,0,일호선,12,남성,휴대전화 번호,01012341234,False,False,True,False,True,False,False,False,False,True,False,False,없음,requested
