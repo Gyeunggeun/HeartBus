@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\상담 학생 데이터.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
