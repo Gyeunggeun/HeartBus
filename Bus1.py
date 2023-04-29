@@ -2,9 +2,6 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import datetime
-import streamlit as st
-from streamlit_folium import st_folium
-import folium
 import os
 
 
