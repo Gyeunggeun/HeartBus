@@ -1,4 +1,2 @@
-﻿start_date,start_hour,start_minute,name,age,gender,communication,number,grade,relationship,sex,bullying,domestic_violence,depression,lifestyle,addiction,drugs,Teenager_counsler,College_counsler,Adult_counsler,additional_text,status
-2023-04-29,21,30,일호선,11,남성,휴대전화 번호,1012341234,True,True,False,True,False,False,False,False,False,False,True,False,없음,approved
-2023-04-29,22,0,일호선,12,남성,휴대전화 번호,1012341234,True,False,False,False,False,True,False,False,False,False,True,False,없음,requested
-2023-04-29,21,0,일호선,12,남성,휴대전화 번호,01012341234,False,False,True,False,True,False,False,False,False,True,False,False,없음,requested
+﻿start_date,start_hour,start_minute,name,age,gender,communication,number,grade,relationship,sex,bullying,domestic_violence,depression,lifestyle,addiction,drugs,Teenager_counsler,College_counsler,Adult_counsler,additional_text,status,원하는 상담사 유형,상담사
+2023-05-02,15,0,가나다,16,여성,휴대전화 번호,010-1234-1234,True,False,False,True,False,True,False,False,False,True,False,False,요즘 너무 우울해요,배정 완료,또래 상담사,이경근

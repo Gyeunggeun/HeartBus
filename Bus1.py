@@ -3,6 +3,7 @@ import streamlit as st
 import numpy as np
 import datetime
 import os
+import altair as alt
 
 
 # -------------------- ▲ 필요 변수 생성 코딩 End ▲ --------------------
@@ -22,7 +23,7 @@ df = pd.read_csv("상담 학생 데이터.csv")
 st.set_page_config('상담 신청 양식 및 대시보드', layout='wide', initial_sidebar_state='expanded')
 
 # tabs 만들기
-tab1, tab2 = st.tabs(['상담 예약 페이지', '대시보드'])
+tab1, tab2, tab3 = st.tabs(['상담 예약 페이지', '상담사 정보 입력','대시보드'])
 with tab1:
         # 제목 넣기
         st.markdown("## 상담 예약 페이지")
@@ -104,7 +105,7 @@ with tab1:
                     unsafe_allow_html=True,
                 )
         with col133:
-            number = st.text_input("연락처를 입력하세요")
+            number = st.text_input("전화번호의 경우, '010-1234-1234' 형식으로 입력하세요")
 
 
         st.markdown("#### 상담 유형")
@@ -139,11 +140,11 @@ with tab1:
                     unsafe_allow_html=True,
                 )
         with col51:  
-            Teenager_counsler = st.checkbox("청소년 상담사")
+            Teenager_counsler = st.checkbox("또래 상담사")
         with col52:
             College_counsler = st.checkbox("대학생 상담사")
         with col53:
-            Adult_counsler = st.checkbox("성인 상담사")
+            Adult_counsler = st.checkbox("전문 상담사")
 
         with st.form(key='tab1_first'):
             add_text = st.text_input("추가적으로 원하는 상담 내용을 입력하세요")
@@ -182,59 +183,126 @@ with tab1:
                 df.to_csv("상담 학생 데이터.csv", index=False, encoding='utf-8-sig')
 
 with tab2:
-    st.markdown('## 대시보드')
-    st.info('금일 상담 학생 정보')
+    st.markdown('## 상담사 정보 입력')
 
-    agent_list_df = pd.read_csv("상담사 리스트.csv")
-    consultation_student_df = pd.read_csv("상담 학생 데이터.csv")
-    consultation_student_df['start_date'] = pd.to_datetime(consultation_student_df['start_date']).dt.date
+    if os.path.exists("상담사 리스트.csv"):
+        agent_list_df = pd.read_csv("상담사 리스트.csv")
 
-    today = datetime.date.today()
+    with st.form(key='tab2_form'):
+        agent_name = st.text_input("상담사 이름을 입력하세요")
+        agent_contact = st.text_input("전화번호를 '010-1234-1234' 형식으로 입력하세요", value="", type="default")
+        agent_position = st.selectbox("상담사 직책을 선택하세요", ['또래 상담사', '대학생 상담사', '전문 상담사'])
 
-    # 오늘의 학생 확인
-    todays_appointments_df = consultation_student_df[consultation_student_df['start_date'] == today]
-    todays_appointments_df['start_time'] = pd.to_datetime(todays_appointments_df['start_date'].astype(str) + ' ' +
-                                                          todays_appointments_df['start_hour'].astype(str) + ':' +
-                                                          todays_appointments_df['start_minute'].astype(str),
-                                                          format='%Y-%m-%d %H:%M')
+        if st.form_submit_button(label='상담사 정보 저장'):
+            agent_data = {
+                "이름": [agent_name],
+                "연락처": [str(agent_contact)],
+                "직책": [agent_position],
+                "appointment_times": [[]]
+            }
 
-    # 예약 내용 업데이트
-    agent_list_df["appointment_times"] = agent_list_df["이름"].apply(
-        lambda x: todays_appointments_df[todays_appointments_df["name"] == x]["start_time"].tolist())
+            new_agent_df = pd.DataFrame(agent_data)
 
-    # 업데이트된 내용 csv 파일에 저장
-    agent_list_df.to_csv("상담사 리스트.csv", index=False, encoding='utf-8-sig')
-
-    # 상담사 리스트와 예약 시간 표시
-    st.markdown("### 금일 상담사 정보")
-    st.write(agent_list_df)
-
-    # 예약시간 중복 확인
-    def check_overlap(appointments, agent, start_time):
-        agent_appointments = appointments[appointments["name"] == agent]
-        for _, appointment in agent_appointments.iterrows():
-            if appointment["start_time"] == start_time:
-                return True
-        return False
-
-    # 예약 시간이 중복되었다면, 중복
-    with st.form(key="tab2_appointment"):
-        agent = st.selectbox("상담사를 선택하세요", agent_list_df["이름"].unique())
-        start_time = st.time_input("상담 시간을 선택하세요")
-
-        if st.form_submit_button("예약 시간 확인"):
-            overlap = check_overlap(todays_appointments_df, agent, start_time)
-            if overlap:
-                st.warning("해당 시간은 예약이 불가능합니다.")
+            if os.path.exists("상담사 리스트.csv"):
+                agent_list_df = agent_list_df.append(new_agent_df, ignore_index=True)
             else:
-                st.success("해당 시간은 예약이 가능합니다.")
+                agent_list_df = new_agent_df
 
-    # 상담 승인 버튼
-    if st.button("상담 승인"):
-        selected_row_index = st.number_input("승인할 상담의 행 번호를 입력하세요", min_value=0, step=1)
-        consultation_student_df.loc[selected_row_index, 'status'] = 'approved'
-        consultation_student_df.to_csv("상담 학생 데이터.csv", index=False, encoding='utf-8-sig')
-        st.success("상담이 승인되었습니다.")
+            agent_list_df.to_csv("상담사 리스트.csv", index=False, encoding='utf-8-sig')
+            st.success("상담사 정보가 저장되었습니다.")
 
-    st.markdown("### 금일 상담 학생 정보")
-    st.write(todays_appointments_df)
+    st.markdown("#### 상담사 데이터 삭제")
+    delete_agent_index = st.number_input("삭제할 상담사 데이터 인덱스를 입력하세요 (0부터 시작)", min_value=0, step=1, key='delete_agent_index')
+
+    if st.button("상담사 데이터 삭제"):
+        if 0 <= delete_agent_index < len(agent_list_df):
+            agent_list_df = agent_list_df.drop(delete_agent_index).reset_index(drop=True)
+            agent_list_df.to_csv("상담사 리스트.csv", index=False, encoding='utf-8-sig')
+            st.success(f"인덱스 {delete_agent_index}의 상담사 데이터가 삭제되었습니다.")
+        else:
+            st.warning("유효한 상담사 데이터를 입력하세요.")
+
+    st.markdown("### 저장된 상담사 정보")
+    if os.path.exists("상담사 리스트.csv"):
+        agent_list_df = pd.read_csv("상담사 리스트.csv")
+        agent_list_df["연락처"] = agent_list_df["연락처"].astype(str)
+        st.write(agent_list_df)
+    else:
+        st.warning("아직 상담사 정보가 없습니다.")
+
+with tab3:
+    st.markdown("## 상담 스케줄 관리 및 상담사 배정")
+
+    if os.path.exists("상담 학생 데이터.csv"):
+        consultation_student_df = pd.read_csv("상담 학생 데이터.csv")
+
+        # 상담 학생 데이터에서 원하는 상담사 유형 열 생성
+        consultation_student_df.loc[consultation_student_df['Teenager_counsler'], '원하는 상담사 유형'] = '또래 상담사'
+        consultation_student_df.loc[consultation_student_df['College_counsler'], '원하는 상담사 유형'] = '대학생 상담사'
+        consultation_student_df.loc[consultation_student_df['Adult_counsler'], '원하는 상담사 유형'] = '전문 상담사'
+
+        # 상담 현황을 표로 표시
+        st.markdown("### 상담 현황")
+        columns_to_display = ['start_date', 'name', 'number', 'status', '원하는 상담사 유형']
+        st.write(consultation_student_df[columns_to_display])
+
+        # 이후 작업을 진행할 수 있습니다.
+    else:
+        st.warning("아직 상담 학생 데이터가 없습니다.")
+
+    if os.path.exists("상담사 리스트.csv"):
+        agent_list_df = pd.read_csv("상담사 리스트.csv")
+
+        st.markdown("### 상담사 배정")
+
+        consultation_index = st.number_input("상담 학생 순번을 입력하세요 (0부터 시작)", min_value=0, step=1)
+
+        if 0 <= consultation_index < len(consultation_student_df):
+            preferred_counselor_type = consultation_student_df.loc[consultation_index, '원하는 상담사 유형']
+            available_counselors = agent_list_df[agent_list_df['직책'] == preferred_counselor_type]
+
+            st.markdown(f"### {preferred_counselor_type} 상담사 목록")
+            st.write(available_counselors)
+        else:
+            st.warning("유효한 순번을 입력하세요.")
+
+    if os.path.exists("상담사 리스트.csv") and os.path.exists("상담 학생 데이터.csv"):
+        st.markdown("### 상담사 선택 및 배정")
+
+        counselor_index = st.number_input("상담사 리스트에서 상담사 순번을 입력하세요 (0부터 시작)", min_value=0, step=1)
+
+        if 0 <= counselor_index < len(agent_list_df):
+            chosen_counselor = agent_list_df.loc[counselor_index, '이름']
+            st.write(f"선택된 상담사: {chosen_counselor}")
+
+            assign_button = st.button("상담사 배정")
+
+            if assign_button:
+                consultation_student_df.loc[consultation_index, '상담사'] = chosen_counselor
+                consultation_student_df.loc[consultation_index, 'status'] = "배정 완료"
+                consultation_student_df.to_csv("상담 학생 데이터.csv", index=False, encoding='utf-8-sig')
+                st.success("상담사가 배정되었습니다.")
+        else:
+            st.warning("유효한 상담사 순번을 입력하세요.")
+
+    st.markdown("### 상담 취소")
+    cancel_index = st.number_input("취소할 상담 학생 번호를 입력하세요 (0부터 시작)", min_value=0, step=1, key='cancel_index')
+
+    if st.button("상담 취소"):
+        if 0 <= cancel_index < len(consultation_student_df):
+            consultation_student_df.loc[cancel_index, 'status'] = 'cancelled'
+            consultation_student_df.to_csv("상담 학생 데이터.csv", index=False, encoding='utf-8-sig')
+            st.success(f"{cancel_index}의 상담이 취소되었습니다.")
+        else:
+            st.warning("유효한 번호를 입력하세요.")
+
+    st.markdown("#### 상담 학생 데이터 삭제")
+    delete_student_index = st.number_input("삭제할 상담 학생 데이터 인덱스를 입력하세요 (0부터 시작)", min_value=0, step=1, key='delete_student_index')
+
+    if st.button("상담 학생 데이터 삭제"):
+        if 0 <= delete_student_index < len(consultation_student_df):
+            consultation_student_df = consultation_student_df.drop(delete_student_index).reset_index(drop=True)
+            consultation_student_df.to_csv("상담 학생 데이터.csv", index=False, encoding='utf-8-sig')
+            st.success(f"{delete_student_index}번 상담 학생 데이터가 삭제되었습니다.")
+        else:
+            st.warning("유효한 학생 데이터를 입력하세요.")
